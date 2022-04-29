@@ -20,7 +20,8 @@ sub main {
 	my $new_mappings = simplify_mappings($mappings);
 
 	apply_mappings($pricat, $new_mappings);
-
+	group_pricat($pricat);
+# say Dumper ($pricat);
 }
 
 
@@ -79,10 +80,27 @@ sub apply_mappings {
 			my $initial_string = join('|', @initial_values);
 			my $final_string = $rules->{$initial_string};
 			$line->{$mapping->{destination_type}} = $final_string;
-
-			say Dumper (\@from_fields, $rules);
 		}
 	}
+}
+
+sub group_pricat {
+	my ($pricat) = @_;
+
+	my $grouped_pricat = {};
+	for my $line (@$pricat) {
+		# my $brand = delete $line->{brand};
+		my $article_number = delete $line->{article_number};
+		# my $ean = delete $line->{ean};
+
+		my $articles = ($grouped_pricat->{articles} //= {});
+		my $article = ($articles->{$article_number} //= {variations => []});
+		push @{$article->{variations}}, $line;
+
+	}
+
+	say Dumper ($grouped_pricat);
+
 }
 
 1;
