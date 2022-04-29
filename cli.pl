@@ -16,6 +16,11 @@ sub main {
 
 	my $pricat   = parse_csv($pricat_file);
 	my $mappings = parse_csv($mappings_file);
+
+	my $new_mappings = simplify_mappings($mappings);
+
+	apply_mappings($pricat, $new_mappings);
+
 }
 
 
@@ -42,10 +47,42 @@ sub parse_csv {
 	$csv->header($fh);
 
 	my $parsed_csv = $csv->getline_hr_all($fh);
-
-	say Dumper($parsed_csv);
-
 	return $parsed_csv;
+}
+
+sub simplify_mappings {
+	my ($mappings) = @_;
+
+	my $new_mappings = {};
+	for my $mapping (@$mappings) {
+		$new_mappings->{$mapping->{source_type}}{destination_type} = $mapping->{destination_type};
+		$new_mappings->{$mapping->{source_type}}{replace}{$mapping->{source}} = $mapping->{destination};
+	}
+
+	return $new_mappings;
+}
+
+sub apply_mappings {
+	my ($pricat, $mappings) = @_;
+
+	for my $line (@$pricat) {
+		for my $from (keys %$mappings) {
+			my @from_fields = split(/\|/, $from);
+
+			my $mapping = $mappings->{$from};
+			my $rules = $mapping->{replace};
+
+			my @initial_values;
+			for my $from_field (@from_fields) {
+				push @initial_values, delete $line->{$from_field};
+			}
+			my $initial_string = join('|', @initial_values);
+			my $final_string = $rules->{$initial_string};
+			$line->{$mapping->{destination_type}} = $final_string;
+
+			say Dumper (\@from_fields, $rules);
+		}
+	}
 }
 
 1;
