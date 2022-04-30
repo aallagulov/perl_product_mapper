@@ -97,22 +97,37 @@ sub _move_common_attributes_from_variations {
 sub _move_common_attributes_from_articles {
   my ($self, $grouped_pricat) = @_;
 
+  my $articles = $grouped_pricat->{articles};
+  my $articles_cnt = scalar(keys %$articles);
+
   my $different_values_per_column = {};
-  for my $article (values %{$grouped_pricat->{articles}}) {
+  for my $article (values %$articles) {
     for my $column (keys %$article) {
       next if $column eq 'variations';
       my $value = $article->{$column};
-      $different_values_per_column->{$column}{$value} = 1;
+      $different_values_per_column->{$column}{$value}++;
     }
   }
 
+  # this hash/dict will be used for fields migration
+  # if field exists in all the articles with the same value - we move it
+  # if not - do nothing
   for my $column (keys %$different_values_per_column) {
-    if (scalar (keys %{$different_values_per_column->{$column}}) > 1) {
+    my $column_counter = $different_values_per_column->{$column};
+    if (
+      # more than one values for this field
+      scalar (keys %$column_counter) > 1
+      or
+      # not all the articles have this field
+      (values %$column_counter)[0] < $articles_cnt
+    ) {
+      # remove this field from the list of moved fields
       delete $different_values_per_column->{$column};
     }
   }
 
-  for my $article (values %{$grouped_pricat->{articles}}) {
+  # remove moved fields
+  for my $article (values %$articles) {
     for my $column (keys %$article) {
       if ($different_values_per_column->{$column}) {
         delete $article->{$column};
@@ -120,6 +135,7 @@ sub _move_common_attributes_from_articles {
     }
   }
 
+  # move fields
   for my $column (keys %$different_values_per_column) {
     $grouped_pricat->{$column} = (keys %{$different_values_per_column->{$column}})[0];
   }
