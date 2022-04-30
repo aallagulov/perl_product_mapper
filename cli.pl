@@ -7,6 +7,7 @@ use feature 'say';
 use Getopt::Long;
 use Pod::Usage;
 use Text::CSV_XS;
+use JSON::XS;
 use Data::Dumper;
 
 main();
@@ -20,8 +21,12 @@ sub main {
 	my $new_mappings = simplify_mappings($mappings);
 
 	apply_mappings($pricat, $new_mappings);
-	group_pricat($pricat);
-# say Dumper ($pricat);
+	my $grouped_pricat = group_pricat($pricat);
+
+	my $json_serializer = JSON::XS->new();
+	$json_serializer->canonical([1]);
+	$json_serializer->pretty([1]);
+ say $json_serializer->encode($grouped_pricat);
 }
 
 
@@ -81,6 +86,10 @@ sub apply_mappings {
 			my $final_string = $rules->{$initial_string};
 			$line->{$mapping->{destination_type}} = $final_string;
 		}
+
+		for my $column (keys %$line) {
+			delete $line->{$column} unless $line->{$column};
+		}
 	}
 }
 
@@ -89,18 +98,73 @@ sub group_pricat {
 
 	my $grouped_pricat = {};
 	for my $line (@$pricat) {
-		# my $brand = delete $line->{brand};
 		my $article_number = delete $line->{article_number};
-		# my $ean = delete $line->{ean};
 
 		my $articles = ($grouped_pricat->{articles} //= {});
 		my $article = ($articles->{$article_number} //= {variations => []});
 		push @{$article->{variations}}, $line;
-
 	}
 
-	say Dumper ($grouped_pricat);
+	# moving common attribute from variations to atricles
+	for my $article (values %{$grouped_pricat->{articles}}) {
+		my $different_values_per_column = {};
 
+		my $variations = $article->{variations};
+		for my $variation (@$variations) {
+			for my $column (keys %$variation) {
+				my $value = $variation->{$column};
+				$different_values_per_column->{$column}{$value} = 1;
+			}
+		}
+
+		for my $column (keys %$different_values_per_column) {
+			if (scalar (keys %{$different_values_per_column->{$column}}) > 1) {
+				delete $different_values_per_column->{$column};
+			}
+		}
+
+		for my $variation (@$variations) {
+			for my $column (keys %$variation) {
+				if ($different_values_per_column->{$column}) {
+					delete $variation->{$column};
+				}
+			}
+		}
+
+		for my $column (keys %$different_values_per_column) {
+			$article->{$column} = (keys %{$different_values_per_column->{$column}})[0];
+		}
+	}
+
+	# moving common attribute from articles to brands
+	my $different_values_per_column = {};
+	for my $article (values %{$grouped_pricat->{articles}}) {
+		for my $column (keys %$article) {
+			next if $column eq 'variations';
+			my $value = $article->{$column};
+			$different_values_per_column->{$column}{$value} = 1;
+		}
+	}
+
+	for my $column (keys %$different_values_per_column) {
+		if (scalar (keys %{$different_values_per_column->{$column}}) > 1) {
+			delete $different_values_per_column->{$column};
+		}
+	}
+
+	for my $article (values %{$grouped_pricat->{articles}}) {
+		for my $column (keys %$article) {
+			if ($different_values_per_column->{$column}) {
+				delete $article->{$column};
+			}
+		}
+	}
+
+	for my $column (keys %$different_values_per_column) {
+		$grouped_pricat->{$column} = (keys %{$different_values_per_column->{$column}})[0];
+	}
+
+	return $grouped_pricat;
 }
 
 1;
