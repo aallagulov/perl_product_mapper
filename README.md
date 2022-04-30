@@ -47,8 +47,19 @@ Stdout:
 ```
 
 Testing:
-```$ prove t```
+```$ prove -v t```
 
 Stdout:
 ```
+t/grouper.t ..
+ok 1 - result groupping is ok
+1..1
+ok
+t/mapper.t ...
+ok 1 - result mapping is ok
+ok 2 - result mapping is ok
+ok 3 - result mapping is ok
+1..3
+ok
+All tests successful.
 ```

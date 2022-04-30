@@ -107,7 +107,7 @@ use Grouper;
 		cmp_deeply(
 		  $grouper->{grouped_pricat},
 		  $case->{result},
-		  "result mapping is ok"
+		  "result groupping is ok"
 		);
 	}
 }
