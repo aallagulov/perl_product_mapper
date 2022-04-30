@@ -1,0 +1,15 @@
+Hi folks!
+
+I was doing this task in a 3 periods of time:
+1) 2 hrs initial implementation which was working
+2) 2 hrs refactoring it (OOP and perparing for unit tests)
+3) 1 hrs - adding tests
+
+You can check the timeling somewhere over there - https://github.com/aallagulov/perl_product_mapper
+
+Regarding the solution:
+1) I assumed that both files are comaparably small ones (especially mappings - it can't be too big in real life) - so I initially read both files into memory and then many times reread and processed the data.
+If my assumption was incorrect - it is quite easy to adapt the code to iterate over data only once for mappings file and only twice(or more?) for pricat file (1st - for reading-mapping, 2nd - for changing the tree and moving the fields to parent levels). This will definitely make code overcomplicated, but if it would be specified in instructions file - I'd implemented these optimisations
+2) There are some corner cases (like only one variation in article) - I solved them as I thought it was the mst logical
+3) I didn't solved bonus task - "to combine multiple elds into a new field" - because it would take a lot of time for coding/testing, but looks like a not interesting task (it looks like another rule for mapper object)
+
