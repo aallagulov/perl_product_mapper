@@ -52,10 +52,11 @@ sub apply {
     my @initial_values;
     for my $from_field (@from_fields) {
       # as I understood - we don't need to have initial fields in result
-      push @initial_values, delete $line->{$from_field};
+      push(@initial_values, delete $line->{$from_field});
     }
+
     my $initial_string = join('|', @initial_values);
-    my $final_string = $rules->{$initial_string};
+    my $final_string = $rules->{$initial_string} // $initial_string;
     $line->{$mapping->{destination_type}} = $final_string;
   }
 

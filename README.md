@@ -7,6 +7,7 @@ Installation steps:
 sudo apt install libtext-csv-perl
 sudo apt install libmoo-perl
 sudo apt install libjson-xs-perl
+sudo apt install libtest-deep-perl
 ```
 
 
