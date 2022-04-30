@@ -15,6 +15,16 @@ has csv => (
   clearer => 1,
 );
 
+has pretty_output => (
+  is => 'ro',
+  default => 0,
+);
+
+has sorted_output => (
+  is => 'ro',
+  default => 0,
+);
+
 has grouped_pricat => (
   is => 'ro',
   builder => 'group_pricat',
@@ -119,8 +129,8 @@ sub return_json {
   my ($self) = @_;
 
   state $json_serializer = JSON::XS->new();
-  $json_serializer->canonical([1]);
-  $json_serializer->pretty([1]);
+  $json_serializer->canonical([1]) if $self->{sorted_output};
+  $json_serializer->pretty([1]) if $self->{pretty_output};
   return $json_serializer->encode($self->{grouped_pricat});
 }
 
